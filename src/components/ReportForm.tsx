@@ -186,8 +186,8 @@ export const ReportForm = () => {
         category,
         description,
         location: {
-          postalCode,
-          name: selectedLocation?.name,
+          postalCode: selectedLocation?.postalCode || postalCode,
+          name: selectedLocation?.name || postalCode, // Użyj nazwy jeśli nie ma selectedLocation
           address: selectedLocation?.address,
           coordinates: selectedLocation?.coordinates,
         },

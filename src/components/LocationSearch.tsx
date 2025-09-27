@@ -66,14 +66,16 @@ export const LocationSearch = ({ value, onChange, placeholder = "Search for loca
 
   const handleLocationSelect = (location: Location) => {
     setSelectedLocation(location);
-    onChange(location.postalCode);
+    // Ustaw pełną nazwę lokalizacji jako wartość, nie tylko postalCode
+    onChange(location.name);
     setIsOpen(false);
     setSearchQuery("");
   };
 
   const handleMapLocationSelect = (location: Location) => {
     setSelectedLocation(location);
-    onChange(location.postalCode);
+    // Ustaw pełną nazwę lokalizacji jako wartość, nie tylko postalCode
+    onChange(location.name);
     setShowMap(false);
     setIsOpen(false); // Zamknij również główne okno wyszukiwania
   };
