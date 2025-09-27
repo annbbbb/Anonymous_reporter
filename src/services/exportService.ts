@@ -1,0 +1,283 @@
+import { Report } from '@/types/report';
+
+// Simple PDF export using browser's print functionality
+export const exportReportsToPDF = (reports: Report[], filename: string = 'reports.pdf') => {
+  // Create a new window for printing
+  const printWindow = window.open('', '_blank');
+  
+  if (!printWindow) {
+    throw new Error('Unable to open print window. Please check your popup blocker settings.');
+  }
+
+  // Generate HTML content for the PDF
+  const htmlContent = generatePDFContent(reports);
+  
+  printWindow.document.write(htmlContent);
+  printWindow.document.close();
+  
+  // Wait for content to load, then print
+  printWindow.onload = () => {
+    printWindow.print();
+    printWindow.close();
+  };
+};
+
+// Generate HTML content for PDF
+const generatePDFContent = (reports: Report[]): string => {
+  const currentDate = new Date().toLocaleDateString('pl-PL');
+  
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>Anonymous Reports Export</title>
+      <style>
+        body {
+          font-family: Arial, sans-serif;
+          margin: 20px;
+          color: #333;
+        }
+        .header {
+          text-align: center;
+          margin-bottom: 30px;
+          border-bottom: 2px solid #0ea5e9;
+          padding-bottom: 20px;
+        }
+        .header h1 {
+          color: #0ea5e9;
+          margin: 0;
+        }
+        .header p {
+          color: #666;
+          margin: 5px 0 0 0;
+        }
+        .stats {
+          display: flex;
+          justify-content: space-around;
+          margin-bottom: 30px;
+          background: #f8fafc;
+          padding: 20px;
+          border-radius: 8px;
+        }
+        .stat-item {
+          text-align: center;
+        }
+        .stat-number {
+          font-size: 24px;
+          font-weight: bold;
+          color: #0ea5e9;
+        }
+        .stat-label {
+          font-size: 14px;
+          color: #666;
+        }
+        .report {
+          margin-bottom: 25px;
+          padding: 20px;
+          border: 1px solid #e2e8f0;
+          border-radius: 8px;
+          page-break-inside: avoid;
+        }
+        .report-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 15px;
+        }
+        .report-id {
+          font-weight: bold;
+          color: #0ea5e9;
+        }
+        .badges {
+          display: flex;
+          gap: 10px;
+        }
+        .badge {
+          padding: 4px 8px;
+          border-radius: 4px;
+          font-size: 12px;
+          font-weight: bold;
+        }
+        .badge-pending { background: #fef3c7; color: #92400e; }
+        .badge-in-review { background: #dbeafe; color: #1e40af; }
+        .badge-resolved { background: #d1fae5; color: #065f46; }
+        .badge-rejected { background: #fee2e2; color: #991b1b; }
+        .badge-critical { background: #fee2e2; color: #991b1b; }
+        .badge-high { background: #fed7aa; color: #9a3412; }
+        .badge-medium { background: #fef3c7; color: #92400e; }
+        .badge-low { background: #d1fae5; color: #065f46; }
+        .report-content {
+          margin-bottom: 15px;
+        }
+        .report-description {
+          margin-bottom: 10px;
+          line-height: 1.6;
+        }
+        .report-meta {
+          display: flex;
+          gap: 20px;
+          font-size: 14px;
+          color: #666;
+        }
+        .meta-item {
+          display: flex;
+          align-items: center;
+          gap: 5px;
+        }
+        .footer {
+          margin-top: 40px;
+          text-align: center;
+          font-size: 12px;
+          color: #666;
+          border-top: 1px solid #e2e8f0;
+          padding-top: 20px;
+        }
+        @media print {
+          body { margin: 0; }
+          .report { page-break-inside: avoid; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1>Anonymous Reports Export</h1>
+        <p>Generated on ${currentDate}</p>
+      </div>
+      
+      <div class="stats">
+        <div class="stat-item">
+          <div class="stat-number">${reports.length}</div>
+          <div class="stat-label">Total Reports</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">${reports.filter(r => r.status === 'pending').length}</div>
+          <div class="stat-label">Pending</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">${reports.filter(r => r.status === 'resolved').length}</div>
+          <div class="stat-label">Resolved</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">${reports.filter(r => r.priority === 'critical').length}</div>
+          <div class="stat-label">Critical</div>
+        </div>
+      </div>
+      
+      ${reports.map(report => generateReportHTML(report)).join('')}
+      
+      <div class="footer">
+        <p>This document contains anonymous reports and is confidential.</p>
+        <p>Generated by Anonymous Reporter System</p>
+      </div>
+    </body>
+    </html>
+  `;
+};
+
+// Generate HTML for individual report
+const generateReportHTML = (report: Report): string => {
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('pl-PL', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const getStatusClass = (status: string) => {
+    return `badge-${status.replace('_', '-')}`;
+  };
+
+  const getPriorityClass = (priority: string) => {
+    return `badge-${priority}`;
+  };
+
+  return `
+    <div class="report">
+      <div class="report-header">
+        <div class="report-id">Report #${report.id.substring(0, 8)}</div>
+        <div class="badges">
+          <span class="badge ${getStatusClass(report.status)}">${report.status.toUpperCase()}</span>
+          <span class="badge ${getPriorityClass(report.priority)}">${report.priority.toUpperCase()}</span>
+        </div>
+      </div>
+      
+      <div class="report-content">
+        <div class="report-description">
+          <strong>Description:</strong><br>
+          ${report.description}
+        </div>
+        
+        <div class="report-meta">
+          <div class="meta-item">
+            <strong>Category:</strong> ${report.category}
+          </div>
+          <div class="meta-item">
+            <strong>Location:</strong> ${report.location.name || report.location.postalCode}
+          </div>
+          <div class="meta-item">
+            <strong>Created:</strong> ${formatDate(report.createdAt)}
+          </div>
+          ${report.photos.length > 0 ? `
+            <div class="meta-item">
+              <strong>Photos:</strong> ${report.photos.length}
+            </div>
+          ` : ''}
+          ${report.sendToAuthorities ? `
+            <div class="meta-item">
+              <strong>Sent to Authorities:</strong> Yes
+            </div>
+          ` : ''}
+        </div>
+      </div>
+    </div>
+  `;
+};
+
+// Export single report to PDF
+export const exportSingleReportToPDF = (report: Report) => {
+  exportReportsToPDF([report], `report-${report.id.substring(0, 8)}.pdf`);
+};
+
+// Export filtered reports to CSV
+export const exportReportsToCSV = (reports: Report[], filename: string = 'reports.csv') => {
+  const headers = [
+    'ID',
+    'Category',
+    'Description',
+    'Location',
+    'Priority',
+    'Status',
+    'Created At',
+    'Photos Count',
+    'Sent to Authorities'
+  ];
+
+  const csvContent = [
+    headers.join(','),
+    ...reports.map(report => [
+      report.id,
+      `"${report.category}"`,
+      `"${report.description.replace(/"/g, '""')}"`,
+      `"${report.location.name || report.location.postalCode}"`,
+      report.priority,
+      report.status,
+      new Date(report.createdAt).toISOString(),
+      report.photos.length,
+      report.sendToAuthorities ? 'Yes' : 'No'
+    ].join(','))
+  ].join('\n');
+
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+  link.setAttribute('href', url);
+  link.setAttribute('download', filename);
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
