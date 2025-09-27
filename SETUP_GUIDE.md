@@ -45,3 +45,5 @@ The application uses two main tables:
 - Check that RLS policies are properly set
 - Verify environment variables are loaded
 - Check browser console for errors
+
+
