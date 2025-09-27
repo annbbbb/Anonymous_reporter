@@ -83,18 +83,6 @@ src/
 - **Workplace** - Workplace harassment and discrimination
 - **Other** - Other issues not covered above
 
-## 🚀 Deployment
-
-### Vercel (Recommended)
-1. Connect your GitHub repository to Vercel
-2. Set environment variables in Vercel dashboard
-3. Deploy automatically on push
-
-### Netlify
-1. Connect your GitHub repository to Netlify
-2. Set build command: `npm run build`
-3. Set publish directory: `dist`
-4. Set environment variables
 
 ## 🛠️ Tech Stack
 
